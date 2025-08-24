@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DreamMapper — Your Dream Universe</title>
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <title>DreamMapper</title>
   <style>
     /* --------------------
        THEME & RESET
@@ -164,7 +165,6 @@
         <button id="exportBtn" class="btn secondary" title="Export JSON">Export</button>
         <label for="importFile" class="btn ghost" title="Import JSON">Import</label>
         <input id="importFile" type="file" accept="application/json" hidden />
-        <button id="clearAllBtn" class="btn danger" title="Delete all data">Reset</button>
       </div>
     </header>
 
@@ -835,6 +835,7 @@ function renderSettings(){
         <div class="toolbar">
           <button class="btn secondary" id="exportBtn2">Export JSON</button>
           <label for="importFile2" class="btn ghost">Import JSON</label>
+        <button id="clearAllBtn" class="btn danger" title="Delete all data">Reset</button>
           <input id="importFile2" type="file" accept="application/json" hidden />
         </div>
       </div>
@@ -843,8 +844,8 @@ function renderSettings(){
         <label class="muted"><input id="reduceMotion" type="checkbox"> Reduce motion</label>
       </div>
       <div class="card">
-        <div class="section-title">About</div>
-        <p class="muted">DreamMapper is a single-file prototype. Your data is stored locally in your browser. No servers, no sign-in.</p>
+        <div class="section-title">Version</div>
+        <p class="muted">DreamMapper V1 Alpha</p>
       </div>
     </div>`;
 

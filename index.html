@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DreamMapper — Your Dream Universe</title>
+  <style>
+    /* --------------------
+       THEME & RESET
+       -------------------- */
+    :root {
+      --bg: #0b0f16;
+      --panel: #121826;
+      --muted: #202a3b;
+      --hi: #7c87ff;
+      --hi-2: #5eead4;
+      --text: #e6e9f5;
+      --text-dim: #b8bfd6;
+      --danger: #ff6b6b;
+      --ok: #22c55e;
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --radius-xl: 18px;
+      --radius-lg: 14px;
+      --radius: 10px;
+      --blur: saturate(160%) blur(6px);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color: var(--text); background: radial-gradient(1200px 800px at 80% -10%, #1a1f2d 0%, transparent 60%), var(--bg);
+      overflow: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; color: inherit; }
+    input, textarea, select { font: inherit; color: inherit; }
+
+    /* --------------------
+       LAYOUT
+       -------------------- */
+    .app {
+      display: grid; grid-template-columns: 280px 1fr; grid-template-rows: 72px 1fr; gap: 18px;
+      height: 100%; padding: 18px;
+    }
+    header {
+      grid-column: 1 / 3; height: 72px; border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(124,135,255,.12), rgba(94,234,212,.08));
+      border: 1px solid rgba(124,135,255,.2);
+      box-shadow: var(--shadow);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 18px 0 14px;
+      backdrop-filter: var(--blur);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: conic-gradient(from 210deg, #7c87ff, #5eead4 40%, #7c87ff 78%);
+      box-shadow: inset 0 0 10px rgba(255,255,255,.35), 0 8px 20px rgba(124,135,255,.35);
+    }
+    .brand h1 { font-size: 18px; letter-spacing: .5px; margin: 0; }
+    .actions { display: flex; align-items: center; gap: 8px; }
+
+    .sidebar {
+      background: linear-gradient(180deg, rgba(18,24,38,.85), rgba(18,24,38,.7));
+      border: 1px solid rgba(124,135,255,.16);
+      border-radius: var(--radius-xl); box-shadow: var(--shadow);
+      padding: 16px; display: flex; flex-direction: column; gap: 18px; min-height: 0;
+    }
+    .view {
+      background: linear-gradient(180deg, rgba(18,24,38,.85), rgba(18,24,38,.7));
+      border: 1px solid rgba(124,135,255,.16);
+      border-radius: var(--radius-xl); box-shadow: var(--shadow);
+      padding: 16px; min-height: 0; overflow: hidden; display: grid; grid-template-rows: auto 1fr;
+    }
+
+    /* --------------------
+       SIDEBAR NAV
+       -------------------- */
+    .nav { display: grid; gap: 8px; }
+    .nav button {
+      border: 1px solid transparent; background: transparent; text-align: left; padding: 12px 12px; border-radius: 12px;
+      display: flex; align-items: center; gap: 12px; opacity: .9; transition: .2s ease;
+    }
+    .nav button:hover { background: var(--muted); border-color: rgba(124,135,255,.24); opacity: 1; }
+    .nav button.active { background: linear-gradient(135deg, rgba(124,135,255,.15), rgba(94,234,212,.12)); border-color: rgba(124,135,255,.4); opacity: 1; }
+    .nav .badge { margin-left: auto; opacity: .8; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: rgba(124,135,255,.18); border: 1px solid rgba(124,135,255,.3); }
+
+    /* --------------------
+       REUSABLE
+       -------------------- */
+    .toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .toolbar .spacer { flex: 1; }
+    .input, .textarea, .select, .chip-input {
+      background: #0f1522; border: 1px solid rgba(124,135,255,.18); border-radius: var(--radius);
+      padding: 12px 12px; outline: none; transition: .2s ease; width: 100%;
+    }
+    .input:focus, .textarea:focus, .select:focus, .chip-input:focus { border-color: rgba(124,135,255,.45); box-shadow: 0 0 0 4px rgba(124,135,255,.15); }
+    .textarea { min-height: 140px; resize: vertical; }
+
+    .btn {
+      padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(124,135,255,.3);
+      background: linear-gradient(135deg, rgba(124,135,255,.28), rgba(94,234,212,.24));
+      cursor: pointer; transition: .2s ease; box-shadow: 0 6px 18px rgba(124,135,255,.18);
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(124,135,255,.28); }
+    .btn.secondary { background: rgba(32,42,59,.6); border-color: rgba(124,135,255,.2); box-shadow: none; }
+    .btn.ghost { background: transparent; border-color: rgba(124,135,255,.2); }
+    .btn.danger { background: linear-gradient(135deg, rgba(255,107,107,.3), rgba(255,107,107,.18)); border-color: rgba(255,107,107,.5); }
+
+    .grid { display: grid; gap: 16px; }
+    .grid.two { grid-template-columns: repeat(2, 1fr); }
+    .grid.three { grid-template-columns: repeat(3, 1fr); }
+    .grid.auto { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+    .card {
+      background: rgba(15,21,34,.8); border: 1px solid rgba(124,135,255,.18); border-radius: var(--radius-lg);
+      padding: 14px; box-shadow: var(--shadow);
+    }
+    .card h3 { margin: 0 0 8px; font-size: 16px; }
+    .muted { color: var(--text-dim); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 6px 10px; border-radius: 999px; background: rgba(124,135,255,.15);
+      border: 1px solid rgba(124,135,255,.25); font-size: 12px; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .chip .x { opacity: .7; cursor: pointer; }
+
+    .section-title { font-weight: 600; font-size: 14px; opacity: .9; letter-spacing: .3px; margin: 4px 0 8px; }
+
+    .status { font-size: 12px; color: var(--text-dim); }
+
+    /* Canvas containers */
+    .canvas-wrap { position: relative; border-radius: var(--radius-lg); overflow: hidden; border: 1px dashed rgba(124,135,255,.25); background: #0e1421; }
+    .canvas-toolbar { display: flex; gap: 8px; align-items: center; padding: 8px; border-bottom: 1px solid rgba(124,135,255,.15); background: #0c1220; }
+
+    /* Scroll containers */
+    .scroll { overflow: auto; }
+    .list { display: grid; gap: 12px; }
+
+    /* Modal */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: center; justify-content: center; padding: 24px; }
+    .modal .box { width: min(720px, 96vw); background: var(--panel); border: 1px solid rgba(124,135,255,.22); border-radius: var(--radius-xl); padding: 18px; box-shadow: var(--shadow); }
+
+    /* Responsive */
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: 72px auto 1fr; }
+      .sidebar { grid-row: 2; }
+      header { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>DreamMapper</h1>
+          <div class="status">Map your dreams, moods & recurring symbols.</div>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="exportBtn" class="btn secondary" title="Export JSON">Export</button>
+        <label for="importFile" class="btn ghost" title="Import JSON">Import</label>
+        <input id="importFile" type="file" accept="application/json" hidden />
+        <button id="clearAllBtn" class="btn danger" title="Delete all data">Reset</button>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="nav">
+        <button class="active" data-view="new">
+          <span>📝</span>
+          <span>New Dream</span>
+        </button>
+        <button data-view="list">
+          <span>📚</span>
+          <span>All Dreams</span>
+          <span class="badge" id="countBadge">0</span>
+        </button>
+        <button data-view="map">
+          <span>🪐</span>
+          <span>Dream Universe</span>
+        </button>
+        <button data-view="insights">
+          <span>📈</span>
+          <span>Insights</span>
+        </button>
+        <button data-view="settings">
+          <span>⚙️</span>
+          <span>Settings</span>
+        </button>
+      </div>
+      <div class="card">
+        <div class="section-title">Quick Tips</div>
+        <ul class="muted" style="margin:0 0 0 18px; padding:0; display:grid; gap:6px;">
+          <li>Use 🎙️ to dictate your dream.</li>
+          <li>Add #tags to connect themes.</li>
+          <li>Draw a symbol to remember details.</li>
+          <li>Open 🪐 to see your constellation.</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main View -->
+    <main class="view">
+      <div class="toolbar" id="toolbar"></div>
+      <div class="scroll" id="content"></div>
+    </main>
+  </div>
+
+  <!-- Modal for dream preview -->
+  <div class="modal" id="dreamModal" aria-hidden="true">
+    <div class="box">
+      <div class="toolbar" style="margin-bottom:10px;">
+        <strong>Dream Preview</strong>
+        <div class="spacer"></div>
+        <button class="btn secondary" id="closeModal">Close</button>
+      </div>
+      <div id="modalBody" class="grid two"></div>
+    </div>
+  </div>
+
+<script>
+/* =========================================================
+   DreamMapper — Single-File Prototype
+   - LocalStorage persistence
+   - Dream entry (text, mood, tags, doodle, voice dictation)
+   - List & search
+   - Dream Universe (keyword graph)
+   - Insights (mood over time, top tags)
+   ========================================================= */
+
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+/* -----------------------------
+   State & Persistence
+------------------------------ */
+const storeKey = 'dreammapper.db.v1';
+let db = load();
+
+function load(){
+  try { return JSON.parse(localStorage.getItem(storeKey)) || { dreams: [], settings: {reduceMotion:false} }; }
+  catch { return { dreams: [], settings: {reduceMotion:false} }; }
+}
+function save(){ localStorage.setItem(storeKey, JSON.stringify(db)); updateCount(); }
+function updateCount(){ $('#countBadge').textContent = db.dreams.length; }
+updateCount();
+
+/* -----------------------------
+   Router / Views
+------------------------------ */
+const toolbar = $('#toolbar');
+const content = $('#content');
+const navButtons = $$('.nav button');
+navButtons.forEach(b => b.addEventListener('click', () => {
+  navButtons.forEach(n => n.classList.remove('active'));
+  b.classList.add('active');
+  routeTo(b.dataset.view);
+}));
+
+function routeTo(view){
+  toolbar.innerHTML = '';
+  content.innerHTML = '';
+  if(view==='new') renderNew();
+  if(view==='list') renderList();
+  if(view==='map') renderMap();
+  if(view==='insights') renderInsights();
+  if(view==='settings') renderSettings();
+}
+routeTo('new');
+
+/* -----------------------------
+   Utilities
+------------------------------ */
+const stopwords = new Set('a an and the to of in on with for from it is was were be been being this that i you he she we they them our your my me us as at by or but so not into out over under then than too very just about across again against all almost alone along already also although always among another any are around because become becomes been before behind below between both came can cannot could did do does doing done during each either enough even ever every few first five following for found four further gave get gives going gone good got great had has have having her here hers herself him himself his how however if into its itself last least less like likely long made make makes many may maybe might more most mostly much must near nearly necessary need never new next nine no non none nor not nothing now often once one only onto other others our ours ourselves out over own part people perhaps place possible probably quite rather really said same say says second see seen several she should since six small some someone something sometimes still such take ten than that the their theirs them themselves then there these they thing think third this those though three through thus time to today together too took toward two under unless until up upon us use used uses using various very want wants was way we well went were what when where whether which while who whole whom whose why will with within without work world would year years yes yet you your yours yourself yourselves'.split(' '));
+
+function tokenize(text){
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9#\s]/g,' ')
+    .split(/\s+/)
+    .filter(t => t && !stopwords.has(t) && t.length>2);
+}
+
+function extractKeywords(text, limit=6){
+  const counts = new Map();
+  tokenize(text).forEach(t => counts.set(t, (counts.get(t)||0)+1));
+  return [...counts.entries()].sort((a,b)=>b[1]-a[1]).slice(0, limit).map(([k])=>k);
+}
+
+function simpleSentiment(text){
+  const pos = ['love','happy','joy','excited','calm','peace','beautiful','fun','amazing','great'];
+  const neg = ['scary','fear','sad','angry','anxious','stress','nightmare','cry','lost','alone','chased'];
+  let s=0; const t=text.toLowerCase();
+  pos.forEach(w=>{ if(t.includes(w)) s+=1; });
+  neg.forEach(w=>{ if(t.includes(w)) s-=1; });
+  return Math.max(-3, Math.min(3, s)); // -3..3
+}
+
+function download(filename, data){
+  const a=document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], {type:'application/json'}));
+  a.download = filename;
+  a.click();
+}
+
+function prettyDate(d){
+  try { return new Date(d).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'}); }
+  catch { return d; }
+}
+
+/* -----------------------------
+   NEW DREAM VIEW
+------------------------------ */
+function renderNew(){
+  toolbar.innerHTML = `
+    <div class="toolbar">
+      <strong>Create a new dream</strong>
+      <div class="spacer"></div>
+      <button class="btn secondary" id="previewBtn">Preview</button>
+      <button class="btn" id="saveBtn">Save Dream</button>
+    </div>`;
+
+  content.innerHTML = `
+    <div class="grid two" style="min-height: calc(100% - 8px);">
+      <div class="grid" style="align-content:start;">
+        <div class="card">
+          <div class="grid two">
+            <div>
+              <div class="section-title">Title</div>
+              <input id="title" class="input" placeholder="e.g., Running through a neon forest" />
+            </div>
+            <div>
+              <div class="section-title">Date</div>
+              <input id="date" class="input" type="date" />
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <div class="section-title">Dream Details</div>
+            <textarea id="details" class="textarea" placeholder="Write what you remember..."></textarea>
+          </div>
+          <div class="grid two" style="margin-top:10px; align-items:end;">
+            <div>
+              <div class="section-title">Tags (press Enter)</div>
+              <div class="chip-input" id="tagInput" contenteditable placeholder="#flying #ocean #school"></div>
+              <div class="chips" id="tagChips" style="margin-top:8px"></div>
+            </div>
+            <div>
+              <div class="section-title">Mood</div>
+              <input id="mood" class="input" type="range" min="-3" max="3" value="0" />
+              <div class="muted" id="moodLabel" style="margin-top:6px">Neutral</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">🎙️ Voice Dictation</div>
+          <div class="toolbar">
+            <button id="voiceBtn" class="btn secondary">Start Dictation</button>
+            <span class="status" id="voiceStatus">Uses your browser's Web Speech API</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="min-height:0;">
+        <div class="card" style="min-height: 280px; display:grid; grid-template-rows: auto 1fr;">
+          <div class="section-title">✏️ Doodle a symbol (optional)</div>
+          <div class="canvas-wrap" style="min-height:220px;">
+            <div class="canvas-toolbar">
+              <button class="btn ghost" id="clearCanvas">Clear</button>
+              <label>Size <input id="penSize" type="range" min="1" max="24" value="4" style="vertical-align:middle"></label>
+              <label>Color <input id="penColor" type="color" value="#9aa7ff"></label>
+            </div>
+            <canvas id="pad" width="1200" height="700" style="display:block; width:100%; height:360px; cursor: crosshair;"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-title">Auto Keywords</div>
+          <div class="chips" id="autoKeywords"></div>
+        </div>
+      </div>
+    </div>`;
+
+  // Init values
+  $('#date').value = new Date().toISOString().slice(0,10);
+
+  // Mood label
+  const mood = $('#mood');
+  const moodLabel = $('#moodLabel');
+  const moodNames = { '-3':'Terrified', '-2':'Anxious', '-1':'Uneasy', '0':'Neutral', '1':'Curious', '2':'Happy', '3':'Euphoric' };
+  mood.addEventListener('input', ()=> moodLabel.textContent = moodNames[mood.value]);
+
+  // Tag input
+  const tagInput = $('#tagInput');
+  const tagChips = $('#tagChips');
+  tagInput.addEventListener('keydown', e => {
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const raw = tagInput.textContent.trim();
+      if(!raw) return;
+      raw.split(/\s+/).forEach(t => addTag(t.replace(/^#?/,'#')));
+      tagInput.textContent='';
+    }
+  });
+  function addTag(tag){
+    if(!tag.startsWith('#')) tag = '#'+tag;
+    tag = tag.replace(/[^#a-z0-9_-]/gi,'');
+    if(!tag || $$(".chip[data-tag='"+tag+"']", tagChips).length) return;
+    const el = document.createElement('span');
+    el.className = 'chip'; el.dataset.tag = tag; el.innerHTML = `${tag} <span class="x" title="remove">✕</span>`;
+    el.querySelector('.x').onclick = ()=> el.remove();
+    tagChips.appendChild(el);
+  }
+
+  // Auto keywords
+  $('#details').addEventListener('input', e => {
+    const kws = extractKeywords(e.target.value, 10);
+    const sent = simpleSentiment(e.target.value);
+    $('#autoKeywords').innerHTML = kws.map(k=>`<span class="chip">${k}</span>`).join('') + (sent ? ` <span class="chip" title="inferred mood">${sent>0? '✨ positive':'⚡ negative'}</span>` : '');
+  });
+
+  // Voice dictation (Web Speech API)
+  let rec, isRec=false;
+  if('webkitSpeechRecognition' in window){
+    rec = new webkitSpeechRecognition();
+    rec.continuous = true; rec.interimResults = true; rec.lang = 'en-US';
+    rec.onresult = (e)=>{
+      let str='';
+      for(let i=e.resultIndex;i<e.results.length;i++) str += e.results[i][0].transcript;
+      $('#details').value += (str.endsWith(' ') ? str : ' '+str);
+      $('#details').dispatchEvent(new Event('input'));
+    };
+    rec.onend = ()=>{ isRec=false; $('#voiceBtn').textContent='Start Dictation'; $('#voiceStatus').textContent='Stopped'; };
+  } else {
+    $('#voiceStatus').textContent = 'Speech recognition not supported in this browser.';
+  }
+  $('#voiceBtn').onclick = ()=>{
+    if(!rec) return;
+    if(!isRec){ rec.start(); isRec=true; $('#voiceBtn').textContent='Stop Dictation'; $('#voiceStatus').textContent='Listening...'; }
+    else { rec.stop(); }
+  };
+
+  // Doodle pad
+  const pad = $('#pad');
+  const ctx = pad.getContext('2d');
+  let drawing=false, last=null; ctx.lineCap='round'; ctx.lineJoin='round';
+  pad.addEventListener('pointerdown', e=>{ drawing=true; last=pt(e); });
+  pad.addEventListener('pointerup', ()=> drawing=false);
+  pad.addEventListener('pointerleave', ()=> drawing=false);
+  pad.addEventListener('pointermove', e=>{
+    if(!drawing) return; const p=pt(e);
+    ctx.strokeStyle = $('#penColor').value; ctx.lineWidth = +$('#penSize').value;
+    ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke(); last=p;
+  });
+  function pt(e){ const r=pad.getBoundingClientRect(); return {x: (e.clientX-r.left)*pad.width/r.width, y:(e.clientY-r.top)*pad.height/r.height}; }
+  $('#clearCanvas').onclick = ()=>{ ctx.clearRect(0,0,pad.width,pad.height); };
+
+  // Save & Preview
+  $('#previewBtn').onclick = showPreview;
+  $('#saveBtn').onclick = saveDream;
+
+  function collect(){
+    const tags = $$('.chip', tagChips).map(c=>c.dataset.tag);
+    const doodle = pad.toDataURL('image/png');
+    const text = $('#details').value.trim();
+    return {
+      id: crypto.randomUUID(),
+      title: $('#title').value.trim() || 'Untitled Dream',
+      date: $('#date').value,
+      text,
+      tags,
+      mood: +$('#mood').value,
+      moodAuto: simpleSentiment(text),
+      keywords: extractKeywords(text, 10),
+      doodle
+    };
+  }
+
+  function showPreview(){
+    const d = collect();
+    const modal=$('#dreamModal'); const body=$('#modalBody');
+    body.innerHTML = `
+      <div class="card">
+        <h3>${d.title}</h3>
+        <div class="muted">${prettyDate(d.date)} · Mood: ${d.mood}</div>
+        <p style="white-space:pre-wrap;">${d.text || '<em class="muted">No details</em>'}</p>
+        <div class="chips">${[...d.tags, ...d.keywords].map(t=>`<span class='chip'>${t}</span>`).join('')}</div>
+      </div>
+      <div class="card">
+        <div class="section-title">Doodle</div>
+        <img src="${d.doodle}" alt="doodle" style="width:100%; border-radius:12px; border:1px solid rgba(124,135,255,.2)"/>
+      </div>`;
+    modal.style.display='flex';
+  }
+  $('#closeModal').onclick = ()=> $('#dreamModal').style.display='none';
+  $('#dreamModal').addEventListener('click', e=>{ if(e.target.id==='dreamModal') $('#dreamModal').style.display='none'; });
+
+  function saveDream(){
+    const d = collect();
+    db.dreams.push(d);
+    save();
+    alert('Dream saved!');
+    routeTo('list');
+  }
+}
+
+/* -----------------------------
+   LIST VIEW
+------------------------------ */
+function renderList(){
+  toolbar.innerHTML = `
+    <input id="search" class="input" placeholder="Search dreams by text or #tag..." style="min-width:240px;">
+    <select id="sort" class="select">
+      <option value="date-desc">Newest first</option>
+      <option value="date-asc">Oldest first</option>
+      <option value="mood-desc">Mood high→low</option>
+      <option value="mood-asc">Mood low→high</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn secondary" id="deleteSelected">Delete Selected</button>
+  `;
+
+  const wrap = document.createElement('div');
+  wrap.className='list';
+  content.appendChild(wrap);
+
+  function render(){
+    const q = $('#search').value.toLowerCase().trim();
+    const [field,dir] = $('#sort').value.split('-');
+    let items = [...db.dreams];
+    items.sort((a,b)=>{
+      if(field==='date') return dir==='desc'? (b.date.localeCompare(a.date)) : (a.date.localeCompare(b.date));
+      if(field==='mood') return dir==='desc'? (b.mood-a.mood) : (a.mood-b.mood);
+      return 0;
+    });
+    if(q){ items = items.filter(d => d.text.toLowerCase().includes(q) || d.title.toLowerCase().includes(q) || d.tags.join(' ').toLowerCase().includes(q)); }
+
+    wrap.innerHTML = items.map(d=>card(d)).join('') || `<div class='muted'>No dreams yet.</div>`;
+    $$('.select-toggle').forEach(el=> el.addEventListener('click', ()=>{ el.classList.toggle('on'); }));
+    $$('.del').forEach(btn=> btn.addEventListener('click', ()=> doDelete(btn.dataset.id)));
+    $$('.open').forEach(btn=> btn.addEventListener('click', ()=> openDream(btn.dataset.id)));
+  }
+
+  function card(d){
+    return `
+    <div class="card" style="display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:center;">
+      <div>
+        <h3>${d.title}</h3>
+        <div class="muted">${prettyDate(d.date)} · Mood: ${d.mood} ${d.moodAuto? `· Inferred: ${d.moodAuto}`:''}</div>
+        <div class="chips" style="margin-top:8px">${[...d.tags, ...d.keywords.map(k=>'#'+k)].map(t=>`<span class='chip'>${t}</span>`).join('')}</div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn secondary open" data-id="${d.id}">Open</button>
+        <button class="btn danger del" data-id="${d.id}">Delete</button>
+      </div>
+    </div>`;
+  }
+
+  function doDelete(id){
+    if(!confirm('Delete this dream?')) return;
+    db.dreams = db.dreams.filter(d=>d.id!==id); save(); render();
+  }
+
+  function openDream(id){
+    const d = db.dreams.find(x=>x.id===id); if(!d) return;
+    const modal=$('#dreamModal'); const body=$('#modalBody');
+    body.innerHTML = `
+      <div class="card">
+        <h3>${d.title}</h3>
+        <div class="muted">${prettyDate(d.date)} · Mood: ${d.mood}</div>
+        <p style="white-space:pre-wrap;">${d.text}</p>
+        <div class="chips">${[...d.tags, ...d.keywords].map(t=>`<span class='chip'>${t}</span>`).join('')}</div>
+      </div>
+      <div class="card">
+        <div class="section-title">Doodle</div>
+        <img src="${d.doodle}" alt="doodle" style="width:100%; border-radius:12px; border:1px solid rgba(124,135,255,.2)"/>
+      </div>`;
+    modal.style.display='flex';
+  }
+
+  $('#search').addEventListener('input', render);
+  $('#sort').addEventListener('change', render);
+  $('#deleteSelected').addEventListener('click', ()=>{
+    if(!confirm('Delete ALL dreams? This cannot be undone.')) return;
+    db.dreams = []; save(); render();
+  });
+
+  render();
+}
+
+/* -----------------------------
+   MAP VIEW — Dream Universe
+------------------------------ */
+function renderMap(){
+  toolbar.innerHTML = `<div class="toolbar">
+    <strong>Dream Universe</strong>
+    <div class="spacer"></div>
+    <span class="status">Nodes sized by frequency · edges = co-occurrence</span>
+  </div>`;
+
+  content.innerHTML = `
+    <div class="card" style="display:grid; grid-template-rows: auto 1fr; min-height: 480px;">
+      <div class="toolbar" style="gap:14px;">
+        <label>Charge <input id="charge" type="range" min="-300" max="0" value="-120"></label>
+        <label>Link <input id="link" type="range" min="10" max="180" value="60"></label>
+        <label><input id="labels" type="checkbox" checked> Labels</label>
+        <div class="spacer"></div>
+        <button class="btn secondary" id="reseed">Reseed</button>
+      </div>
+      <div class="canvas-wrap" style="height: 520px;">
+        <canvas id="universe" width="1400" height="800" style="width:100%; height:100%; display:block"></canvas>
+      </div>
+    </div>`;
+
+  // Build graph from dreams
+  const freq = new Map();
+  const edges = new Map(); // key "a|b" -> weight
+  db.dreams.forEach(d=>{
+    const set = new Set([...(d.tags||[]).map(t=>t.replace(/^#/,'')), ...(d.keywords||[])]);
+    set.forEach(k=> freq.set(k, (freq.get(k)||0)+1));
+    const arr=[...set];
+    for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++){
+      const key = arr[i]<arr[j]? `${arr[i]}|${arr[j]}` : `${arr[j]}|${arr[i]}`;
+      edges.set(key, (edges.get(key)||0)+1);
+    }
+  });
+
+  const nodes = [...freq.entries()].map(([id, count])=>({ id, count, x: Math.random(), y: Math.random(), vx:0, vy:0 }));
+  const idToNode = new Map(nodes.map(n=>[n.id,n]));
+  const links = [...edges.entries()].map(([k,w])=>{ const [a,b]=k.split('|'); return { source:idToNode.get(a), target:idToNode.get(b), w }; });
+
+  const canvas = $('#universe'); const ctx = canvas.getContext('2d');
+  let W=canvas.width, H=canvas.height;
+  function resize(){ const r=canvas.getBoundingClientRect(); W=canvas.width=r.width*2; H=canvas.height=r.height*2; }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Simple force simulation
+  const params = { charge: -120, link: 60 };
+  $('#charge').oninput = e=> params.charge = +e.target.value;
+  $('#link').oninput = e=> params.link = +e.target.value;
+  $('#labels').onchange = ()=>{};
+  $('#reseed').onclick = ()=> nodes.forEach(n=>{ n.x=Math.random(); n.y=Math.random(); n.vx=0; n.vy=0; });
+
+  // Setup initial positions roughly radial by frequency
+  const maxC = Math.max(1, ...nodes.map(n=>n.count));
+  nodes.forEach((n,i)=>{
+    const r = (1 - (n.count/maxC)) * 0.4 + 0.15; // more frequent -> closer to center
+    const a = i/nodes.length * Math.PI*2;
+    n.x = 0.5 + r*Math.cos(a);
+    n.y = 0.5 + r*Math.sin(a);
+  });
+
+  // Dragging
+  let drag=null;
+  canvas.addEventListener('pointerdown', e=>{
+    const m = mouse(e);
+    const hit = nodes.find(n=> dist(m.x,m.y, n.x*W, n.y*H) < radius(n)*1.1 );
+    if(hit){ drag=hit; drag.fx=m.x; drag.fy=m.y; }
+  });
+  canvas.addEventListener('pointermove', e=>{ if(drag){ const m=mouse(e); drag.fx=m.x; drag.fy=m.y; }});
+  canvas.addEventListener('pointerup', ()=>{ if(drag){ delete drag.fx; delete drag.fy; drag=null; }});
+  canvas.addEventListener('pointerleave', ()=>{ if(drag){ delete drag.fx; delete drag.fy; drag=null; }});
+
+  function mouse(e){ const r=canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*2, y:(e.clientY-r.top)*2 } }
+  function dist(x1,y1,x2,y2){ const dx=x1-x2, dy=y1-y2; return Math.hypot(dx,dy); }
+  function radius(n){ return 10 + (n.count/maxC)*26; }
+
+  function step(){
+    // physics
+    for(const n of nodes){
+      for(const m of nodes){ if(n===m) continue; // repulsion
+        const dx=n.x-m.x, dy=n.y-m.y; const d2=dx*dx+dy*dy+1e-4; const f=params.charge/d2; n.vx += dx*f; n.vy += dy*f; }
+    }
+    for(const l of links){ // spring
+      const dx=l.target.x - l.source.x, dy=l.target.y - l.source.y; const d=Math.hypot(dx,dy)+1e-4; const k=0.05; const rest=(params.link/Math.max(80,W))*2; const f=k*(d-rest);
+      const ux=dx/d, uy=dy/d; l.source.vx += ux*f; l.source.vy += uy*f; l.target.vx -= ux*f; l.target.vy -= uy*f;
+    }
+    for(const n of nodes){ // integrate & bounds
+      if(n.fx!==undefined){ n.x = n.fx/W; n.y = n.fy/H; n.vx=0; n.vy=0; }
+      n.x += n.vx; n.y += n.vy; n.vx*=0.9; n.vy*=0.9;
+      n.x = Math.max(0.06, Math.min(0.94, n.x));
+      n.y = Math.max(0.06, Math.min(0.94, n.y));
+    }
+
+    // draw
+    ctx.clearRect(0,0,W,H);
+    // glow background
+    const g=ctx.createRadialGradient(W/2,H/2,10,W/2,H/2,Math.min(W,H)/2);
+    g.addColorStop(0,'rgba(124,135,255,.08)'); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+    // edges
+    ctx.lineWidth=2; ctx.strokeStyle='rgba(124,135,255,.18)';
+    links.forEach(l=>{ ctx.beginPath(); ctx.moveTo(l.source.x*W,l.source.y*H); ctx.lineTo(l.target.x*W,l.target.y*H); ctx.stroke(); });
+
+    // nodes
+    nodes.forEach(n=>{
+      const r = radius(n);
+      const x=n.x*W, y=n.y*H;
+      const grd=ctx.createRadialGradient(x,y,1,x,y,r);
+      grd.addColorStop(0,'rgba(94,234,212,.9)');
+      grd.addColorStop(1,'rgba(124,135,255,.2)');
+      ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+      if($('#labels').checked){
+        ctx.font = 'bold 24px system-ui'; ctx.fillStyle='rgba(230,233,245,.95)'; ctx.textAlign='center'; ctx.fillText(n.id, x, y - r - 8);
+      }
+    });
+
+    requestAnimationFrame(step);
+  }
+  step();
+}
+
+/* -----------------------------
+   INSIGHTS VIEW
+------------------------------ */
+function renderInsights(){
+  toolbar.innerHTML = `<div class="toolbar">
+    <strong>Insights</strong>
+    <div class="spacer"></div>
+    <span class="status">Weekly trends from your logs</span>
+  </div>`;
+
+  content.innerHTML = `
+    <div class="grid two" style="min-height:100%;">
+      <div class="card" style="display:grid; grid-template-rows:auto 1fr; min-height:280px;">
+        <div class="section-title">Mood Over Time</div>
+        <canvas id="moodChart" style="width:100%; height:260px"></canvas>
+      </div>
+      <div class="card" style="display:grid; grid-template-rows:auto 1fr; min-height:280px;">
+        <div class="section-title">Top Tags & Keywords</div>
+        <canvas id="tagChart" style="width:100%; height:260px"></canvas>
+      </div>
+      <div class="card">
+        <div class="section-title">Summaries</div>
+        <div id="insightText" class="muted"></div>
+      </div>
+    </div>`;
+
+  // Prepare data
+  const dreams = [...db.dreams].sort((a,b)=> a.date.localeCompare(b.date));
+  const labels = dreams.map(d=> prettyDate(d.date));
+  const mood = dreams.map(d=> d.mood);
+
+  // Simple charts (vanilla canvas)
+  lineChart($('#moodChart'), labels, mood, {yMin:-3, yMax:3});
+
+  const counts = new Map();
+  dreams.forEach(d=>{ (d.tags||[]).forEach(t=> counts.set(t,(counts.get(t)||0)+1)); (d.keywords||[]).forEach(k=> counts.set('#'+k,(counts.get('#'+k)||0)+1)); });
+  const top = [...counts.entries()].sort((a,b)=> b[1]-a[1]).slice(0, 10);
+  barChart($('#tagChart'), top.map(x=>x[0]), top.map(x=>x[1]));
+
+  // Insight text
+  const avgMood = mood.length? (mood.reduce((a,b)=>a+b,0)/mood.length).toFixed(2) : '—';
+  const mostCommon = top[0]?.[0] || '—';
+  $('#insightText').innerHTML = `
+    <ul style="margin:0 0 0 18px; display:grid; gap:6px;">
+      <li>Average mood: <strong>${avgMood}</strong></li>
+      <li>Most common theme: <strong>${mostCommon}</strong></li>
+      <li>Total dreams logged: <strong>${db.dreams.length}</strong></li>
+    </ul>`;
+}
+
+function lineChart(canvas, labels, values, {yMin=-3, yMax=3}={}){
+  const ctx = canvas.getContext('2d');
+  const ratio = window.devicePixelRatio||1;
+  function resize(){ const r=canvas.getBoundingClientRect(); canvas.width=r.width*ratio; canvas.height=r.height*ratio; draw(); }
+  window.addEventListener('resize', resize); resize();
+  function draw(){
+    const W=canvas.width, H=canvas.height; ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='rgba(124,135,255,.08)'; ctx.fillRect(0,0,W,H);
+    const pad=50*ratio; const chartW=W-pad*2; const chartH=H-pad*2;
+    // axes
+    ctx.strokeStyle='rgba(184,191,214,.35)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, H-pad); ctx.lineTo(W-pad, H-pad); ctx.stroke();
+    // ticks
+    const steps=6; for(let i=0;i<=steps;i++){ const y=pad + (chartH*(i/steps));
+      ctx.globalAlpha=.5; ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(W-pad, y); ctx.stroke(); ctx.globalAlpha=1;
+      const v = yMax - (i/steps)*(yMax-yMin); ctx.fillStyle='rgba(184,191,214,.8)'; ctx.font=`${12*ratio}px system-ui`; ctx.textAlign='right'; ctx.fillText(v.toFixed(0), pad-8, y+4);
+    }
+    // line
+    if(values.length){
+      ctx.strokeStyle='rgba(94,234,212,.9)'; ctx.lineWidth=3*ratio; ctx.beginPath();
+      values.forEach((v,i)=>{
+        const x = pad + (chartW * (i/Math.max(1,values.length-1)));
+        const y = pad + chartH * (1-(v-yMin)/(yMax-yMin));
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+      // points
+      ctx.fillStyle='rgba(124,135,255,.9)';
+      values.forEach((v,i)=>{ const x = pad + (chartW * (i/Math.max(1,values.length-1))); const y = pad + chartH * (1-(v-yMin)/(yMax-yMin)); ctx.beginPath(); ctx.arc(x,y,4*ratio,0,Math.PI*2); ctx.fill(); });
+    }
+    // x labels (sparse)
+    ctx.fillStyle='rgba(184,191,214,.8)'; ctx.textAlign='center'; ctx.font=`${12*ratio}px system-ui`;
+    const step = Math.ceil(labels.length/6);
+    labels.forEach((lb,i)=>{ if(i%step===0){ const x = pad + (chartW * (i/Math.max(1,labels.length-1))); ctx.fillText(lb, x, H-pad+18); }});
+  }
+}
+
+function barChart(canvas, labels, values){
+  const ctx = canvas.getContext('2d');
+  const ratio = window.devicePixelRatio||1;
+  function resize(){ const r=canvas.getBoundingClientRect(); canvas.width=r.width*ratio; canvas.height=r.height*ratio; draw(); }
+  window.addEventListener('resize', resize); resize();
+  function draw(){
+    const W=canvas.width, H=canvas.height; ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='rgba(124,135,255,.08)'; ctx.fillRect(0,0,W,H);
+    const pad=50*ratio; const chartW=W-pad*2; const chartH=H-pad*2;
+    const max = Math.max(1, ...values);
+    // axes
+    ctx.strokeStyle='rgba(184,191,214,.35)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, H-pad); ctx.lineTo(W-pad, H-pad); ctx.stroke();
+    const barW = chartW / Math.max(1, values.length);
+    values.forEach((v,i)=>{
+      const x = pad + i*barW + barW*0.12, w=barW*0.76; const h = (v/max)*chartH; const y = H-pad - h;
+      const grd = ctx.createLinearGradient(0,y,0,y+h); grd.addColorStop(0,'rgba(94,234,212,.9)'); grd.addColorStop(1,'rgba(124,135,255,.5)');
+      ctx.fillStyle=grd; ctx.fillRect(x,y,w,h);
+      ctx.fillStyle='rgba(184,191,214,.9)'; ctx.textAlign='center'; ctx.font=`${12*ratio}px system-ui`; ctx.fillText(labels[i], x+w/2, H-pad+18);
+    });
+  }
+}
+
+/* -----------------------------
+   SETTINGS VIEW
+------------------------------ */
+function renderSettings(){
+  content.innerHTML = `
+    <div class="grid auto">
+      <div class="card">
+        <div class="section-title">Data</div>
+        <div class="toolbar">
+          <button class="btn secondary" id="exportBtn2">Export JSON</button>
+          <label for="importFile2" class="btn ghost">Import JSON</label>
+          <input id="importFile2" type="file" accept="application/json" hidden />
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Accessibility</div>
+        <label class="muted"><input id="reduceMotion" type="checkbox"> Reduce motion</label>
+      </div>
+      <div class="card">
+        <div class="section-title">About</div>
+        <p class="muted">DreamMapper is a single-file prototype. Your data is stored locally in your browser. No servers, no sign-in.</p>
+      </div>
+    </div>`;
+
+  $('#exportBtn2').onclick = ()=> download('dreammapper.json', JSON.stringify(db, null, 2));
+  $('#importFile2').onchange = importJSON;
+  $('#reduceMotion').checked = !!db.settings.reduceMotion;
+  $('#reduceMotion').onchange = (e)=>{ db.settings.reduceMotion = e.target.checked; save(); };
+}
+
+/* -----------------------------
+   HEADER ACTIONS
+------------------------------ */
+$('#exportBtn').onclick = ()=> download('dreammapper.json', JSON.stringify(db, null, 2));
+$('#importFile').onchange = importJSON;
+$('#clearAllBtn').onclick = ()=>{ if(confirm('Reset all DreamMapper data?')){ db={ dreams:[], settings:{reduceMotion:false} }; save(); routeTo('new'); } };
+
+function importJSON(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader(); reader.onload = ()=>{
+    try { const data = JSON.parse(reader.result); if(!data || !Array.isArray(data.dreams)) throw new Error('Invalid file'); db = data; save(); alert('Imported!'); routeTo('list'); }
+    catch(err){ alert('Failed to import: '+err.message); }
+  }; reader.readAsText(file);
+}
+
+</script>
+</body>
+</html>
